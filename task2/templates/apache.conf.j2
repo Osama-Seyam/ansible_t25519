@@ -1,0 +1,11 @@
+
+# Virtual Host configuration
+<VirtualHost *:{{ virtual_host_port }}>
+    
+    ServerName "{{server_name}}"
+    ServerAdmin "{{server_admin}}"
+    DocumentRoot "{{document_root}}"
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>

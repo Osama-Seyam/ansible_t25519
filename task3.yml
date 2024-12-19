@@ -1,0 +1,101 @@
+---
+- name: Deploy LAMP Stack
+  hosts: web
+  become: yes
+
+  vars:
+    mysql_root_password: "secure_password123"
+    mysql_db: "lampdb"
+    mysql_user: "lampuser"
+    mysql_password: "lamppass123"
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install Apache
+      apt:
+        name: apache2
+        state: present
+
+    - name: Start and enable Apache
+      service:
+        name: apache2
+        state: started
+        enabled: yes
+
+    - name: Install MySQL
+      apt:
+        name: 
+          - mysql-server
+          - python3-pymysql
+        state: present
+
+    - name: Install PHP and modules
+      apt:
+        name:
+          - php
+          - php-mysql
+          - php-cli
+          - php-curl
+          - php-json
+          - php-common
+          - libapache2-mod-php
+        state: present
+
+    - name: Start MySQL Service
+      service:
+        name: mysql
+        state: started
+        enabled: yes
+
+    - name: Reset MySQL root password
+      command: mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ mysql_root_password }}';"
+      ignore_errors: yes
+
+    - name: Create MySQL config file
+      copy:
+        content: |
+          [client]
+          user=root
+          password={{ mysql_root_password }}
+        dest: /root/.my.cnf
+        mode: '0600'
+
+    - name: Create MySQL database
+      mysql_db:
+        name: "{{ mysql_db }}"
+        state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+
+    - name: Create MySQL user
+      mysql_user:
+        name: "{{ mysql_user }}"
+        password: "{{ mysql_password }}"
+        priv: "{{ mysql_db }}.*:ALL"
+        host: localhost
+        state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+
+    - name: Create info.php
+      copy:
+        content: |
+          <?php
+          phpinfo();
+          ?>
+        dest: /var/www/html/info.php
+        mode: '0644'
+
+  handlers:
+    - name: Restart Apache
+      service:
+        name: apache2
+        state: restarted
+
+    - name: Restart MySQL
+      service:
+        name: mysql
+        state: restarted

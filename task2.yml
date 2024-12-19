@@ -1,0 +1,51 @@
+---
+- name: Configure Apache Server
+  hosts: db
+  become: yes
+
+  vars:
+    virtual_host_port: 8080
+    server_name: "node-b"
+    server_admin: "node-b"
+    document_root: "/var/www/php"
+
+
+
+  tasks:
+    - name: Ensure Apache is installed
+      apt:
+        name: apache2
+        state: present
+        update_cache: yes
+
+    - name: Create /var/www/php folder
+      file:
+        path: /var/www/php
+        state: directory
+
+    - name: Create index.html file
+      copy:
+        content: "hello from virtual host"
+        dest: /var/www/php/index.html
+        mode: '0644'
+
+    - name: Deploy Apache configuration
+      template:
+        src: task2/templates/apache.conf.j2
+        dest: /etc/apache2/sites-enabled/site1.conf
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart apache
+  
+    - name: Add listen to port 8080 in port.conf
+      lineinfile:
+        path: /etc/apache2/ports.conf
+        line: 'Listen {{ virtual_host_port }}'
+        create: yes
+
+  handlers:
+    - name: restart apache
+      service:
+        name: apache2
+        state: restarted
