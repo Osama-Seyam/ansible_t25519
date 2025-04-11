@@ -2,14 +2,11 @@
 - name: Configure Apache Server
   hosts: db
   become: yes
-
   vars:
     virtual_host_port: 8080
     server_name: "node-b"
     server_admin: "node-b"
     document_root: "/var/www/php"
-
-
 
   tasks:
     - name: Ensure Apache is installed

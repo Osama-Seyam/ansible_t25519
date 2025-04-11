@@ -14,7 +14,6 @@
         state: started
         enabled: yes
 
-
 - name: Install and configure HAProxy
   hosts: proxy
   become: yes
